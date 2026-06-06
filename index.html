@@ -501,6 +501,17 @@ select option{background:#13131a}
 <script>
 // ── FIREBASE ──────────────────────────────────────────────────────────────
 const CFG_KEY='geoatt_firebase_cfg';
+  const firebaseConfig = {
+  apiKey: "AIzaSyDgudNZMKVeAsyMnA0URhxigq7Liz413fU",
+  authDomain: "geoattend-ee6a2.firebaseapp.com",
+  databaseURL: "https://geoattend-ee6a2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "geoattend-ee6a2",
+  storageBucket: "geoattend-ee6a2.firebasestorage.app",
+  messagingSenderId: "1096021041039",
+  appId: "1:1096021041039:web:acd298ce6e686b46e035fa",
+  measurementId: "G-KPN9KKG6XK"
+};
+
 let db=null,app=null;
 let currentUser=null,currentRole=null,loginRole='admin';
 let watchId=null,keepAliveTimer=null,deferredInstall=null;
@@ -600,9 +611,13 @@ window.addEventListener('load',()=>{
     document.getElementById('splash').style.opacity='0';
     document.getElementById('splash').style.transition='opacity .4s';
     setTimeout(()=>{document.getElementById('splash').style.display='none';},400);
-    const cfg=loadCfg();
-    if(cfg&&initFirebase(cfg)){showLogin();}
-    else{document.getElementById('setupScreen').style.display='flex';}
+    if(initFirebase(firebaseConfig)){
+    showLogin();
+}
+else{
+    alert('Firebase configuration error.');
+}
+ 
   },2000);
 });
 
