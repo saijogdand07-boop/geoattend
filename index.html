@@ -745,7 +745,8 @@ function subscribeAdmin(){
 }
 
 function subscribeEmployee(){
-  // Subscribe to own data
+ 
+  // Employee data
   db.ref(`employees/${currentUser}`).on('value',snap=>{
     if(snap.val()){
       EMPLOYEES[currentUser]=snap.val();
@@ -753,8 +754,17 @@ function subscribeEmployee(){
       setSyncDot(true);
     }
   });
-  // Settings for track interval
-  db.ref('settings').once('value').then(snap=>{SETTINGS=snap.val()||{trackInterval:30000};});
+ 
+  // Load locations
+  db.ref('locations').on('value',snap=>{
+    LOCATIONS=snap.val()||{};
+    renderSelf();
+  });
+ 
+  // Settings
+  db.ref('settings').once('value').then(snap=>{
+    SETTINGS=snap.val()||{trackInterval:30000};
+  });
 }
 
 // ── MIDNIGHT RESET ────────────────────────────────────────────────────────
