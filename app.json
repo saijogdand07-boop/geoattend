@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "GeoAttend",
+    "slug": "geoattend",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0f"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.geoattend.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "GeoAttend needs your location to track attendance when you are at the office.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "GeoAttend needs your location in the background to automatically check you in and out of the office.",
+        "NSLocationAlwaysUsageDescription": "GeoAttend tracks your location in the background to mark your attendance automatically.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6c63ff"
+      },
+      "package": "com.geoattend.app",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "GeoAttend needs location access to automatically track your office attendance.",
+          "locationAlwaysPermission": "GeoAttend tracks location in background for automatic attendance.",
+          "locationWhenInUsePermission": "GeoAttend needs location to check if you are at the office.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6c63ff"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
