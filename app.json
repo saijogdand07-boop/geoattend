@@ -4,13 +4,11 @@
     "slug": "geoattend",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./icon-512.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0a0a0f"
-    },
+  "backgroundColor": "#0a0a0f"
+},
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
@@ -24,7 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./icon-512.png",
         "backgroundColor": "#6c63ff"
       },
       "package": "com.geoattend.app",
