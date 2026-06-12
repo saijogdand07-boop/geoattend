@@ -35,25 +35,24 @@
         "RECEIVE_BOOT_COMPLETED"
       ]
     },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "GeoAttend needs location access to automatically track your office attendance.",
-          "locationAlwaysPermission": "GeoAttend tracks location in background for automatic attendance.",
-          "locationWhenInUsePermission": "GeoAttend needs location to check if you are at the office.",
-          "isAndroidBackgroundLocationEnabled": true,
-          "isAndroidForegroundServiceEnabled": true
-        }
-      ],
-      [
-       [
-  "expo-notifications",
-  {
-    "color": "#6c63ff"
-  }
-]
-    ],
+   "plugins": [
+  [
+    "expo-location",
+    {
+      "locationAlwaysAndWhenInUsePermission": "GeoAttend needs location access to automatically track your office attendance.",
+      "locationAlwaysPermission": "GeoAttend tracks location in background for automatic attendance.",
+      "locationWhenInUsePermission": "GeoAttend needs location to check if you are at the office.",
+      "isAndroidBackgroundLocationEnabled": true,
+      "isAndroidForegroundServiceEnabled": true
+    }
+  ],
+  [
+    "expo-notifications",
+    {
+      "color": "#6c63ff"
+    }
+  ]
+],
     "extra": {
       "eas": {
         "projectId": "4484fe47-2229-4506-91d7-5af3f5992fcf"
