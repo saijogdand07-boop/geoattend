@@ -514,9 +514,6 @@ function initFirebase(cfg) {
     return true;
   } catch (e) { console.error(e); return false; }
 }
-  try { if (app) return true; app = firebase.initializeApp(cfg); db = firebase.database(); return true; }
-  catch (e) { console.error(e); return false; }
-}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────
 function initials(n) { return (n || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
