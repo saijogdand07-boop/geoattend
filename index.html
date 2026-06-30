@@ -459,6 +459,7 @@ select option{background:#13131a}
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
 <script>
 // ── FIREBASE CONFIG ───────────────────────────────────────────────────────
@@ -472,12 +473,47 @@ const FIREBASE_CONFIG = {
   appId: "1:1096021041039:web:acd298ce6e686b46e035fa"
 };
 
-let db = null, app = null;
+let db = null, app = null, auth = null;
+let currentFirebaseUid = null;
+
+function emailFor(username) { return username.trim().toLowerCase() + '@geoattend.local'; }
+
+// Migrates a legacy plaintext account to real Firebase Auth on first login.
+// Safe no-op if already migrated. Never touches employee attendance data.
+async function ensureAuthAccount(username, plaintextPassword, role) {
+  const email = emailFor(username);
+  try {
+    // Try signing in first — if it works, account already exists in Auth
+    await auth.signInWithEmailAndPassword(email, plaintextPassword);
+    return true;
+  } catch (e) {
+    if (e.code === 'auth/user-not-found') {
+      // First time this user logs in since Auth was enabled — create their Auth account now
+      try {
+        await auth.createUserWithEmailAndPassword(email, plaintextPassword);
+        return true;
+      } catch (createErr) {
+        console.error('Auth create failed', createErr);
+        return false;
+      }
+    }
+    // Wrong password or other error
+    return false;
+  }
+}
 let currentUser = null, currentRole = null, loginRole = 'admin';
 let watchId = null, keepAliveTimer = null;
 let EMPLOYEES = {}, LOCATIONS = {}, GLOBAL_LOGS = [], SETTINGS = { trackInterval: 30000 }, PENDING_SHARES = {};
 
 function initFirebase(cfg) {
+  try {
+    if (app) return true;
+    app = firebase.initializeApp(cfg);
+    db = firebase.database();
+    auth = firebase.auth();
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
   try { if (app) return true; app = firebase.initializeApp(cfg); db = firebase.database(); return true; }
   catch (e) { console.error(e); return false; }
 }
@@ -576,12 +612,18 @@ async function doLogin() {
       const snap = await db.ref(`accounts/${u}`).once('value');
       const acc = snap.val();
       if (acc && acc.role === 'admin' && acc.password === p) {
+        const authOk = await ensureAuthAccount(u, p, 'admin');
+        if (authOk) currentFirebaseUid = auth.currentUser ? auth.currentUser.uid : null;
+        // Mark this uid as admin in adminUids list for security rules (safe if already present)
+        if (currentFirebaseUid) await db.ref(`adminUids/${currentFirebaseUid}`).set(true).catch(() => {});
         currentUser = u; currentRole = 'admin'; launchApp();
       } else { err.innerHTML = '❌ Invalid admin credentials.'; }
     } else {
       const snap = await db.ref(`employees/${u}`).once('value');
       const emp = snap.val();
       if (emp && emp.password === p) {
+        const authOk = await ensureAuthAccount(u, p, 'employee');
+        if (authOk) currentFirebaseUid = auth.currentUser ? auth.currentUser.uid : null;
         currentUser = u; currentRole = 'employee'; launchApp();
       } else { err.innerHTML = '❌ Invalid credentials. Contact your admin.'; }
     }
@@ -630,6 +672,8 @@ function switchPage(id) {
 
 function logout() {
   stopGPS();
+  if (auth && auth.currentUser) auth.signOut().catch(() => {});
+  currentFirebaseUid = null;
   currentUser = null; currentRole = null;
   EMPLOYEES = {}; LOCATIONS = {}; GLOBAL_LOGS = []; PENDING_SHARES = {};
   document.getElementById('appScreen').style.display = 'none';
