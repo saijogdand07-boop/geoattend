@@ -486,6 +486,7 @@ function initFirebase(cfg) {
 function initials(n) { return (n || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2); }
 function fmtTime(ts) { if (!ts) return '--'; return new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }); }
 function fmtDateTime(ts) { return new Date(ts).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+function fmt12(t) { if (!t) return '--'; const [h, m] = t.split(':').map(Number); const ap = h >= 12 ? 'PM' : 'AM'; return (h % 12 || 12) + ':' + (m < 10 ? '0'+m : m) + ' ' + ap; }
 function today() { return new Date().toISOString().slice(0, 10); }
 function minsToStr(m) { const c = Math.min(Math.max(0, m), 1440); const h = Math.floor(c / 60), mn = Math.round(c % 60); return h + 'h ' + (mn < 10 ? '0' + mn : mn) + 'm'; }
 function haversine(lat1, lon1, lat2, lon2) { const R = 6371000, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2; return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); }
@@ -714,7 +715,7 @@ function renderDashboard() {
       <div class="avatar" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${initials(emp.name)}</div>
       <div class="emp-info">
         <div class="emp-name">${emp.name}${isLate(emp) ? ' <span class="badge badge-late">⏰ Late</span>' : ''}${isShiftIncomplete(emp) ? ' <span class="badge badge-incomplete">⚠️ Short</span>' : ''}</div>
-        <div class="emp-sub">${loc ? '📍 ' + loc.name : 'No location'} · ${emp.workStart || '--'}–${emp.workEnd || '--'}</div>
+        <div class="emp-sub">${loc ? '📍 ' + loc.name : 'No location'} · ${fmt12(emp.workStart)}–${fmt12(emp.workEnd)}</div>
         <div class="emp-sub">${minsToStr(mins)} worked today</div>
       </div>
       <div class="emp-right">${statusBadge}<span style="font-size:11px;color:var(--text3);font-family:DM Mono">${isIn ? fmtTime(emp.lastIn) : '--'}</span></div>
@@ -743,7 +744,7 @@ function renderEmpList() {
       <div class="avatar" style="width:38px;height:38px;font-size:13px;flex-shrink:0">${initials(emp.name)}</div>
       <div class="emp-info" style="flex:1">
         <div class="emp-name">${emp.name} ${isLate(emp) ? '<span class="badge badge-late">⏰</span>' : ''} ${isShiftIncomplete(emp) ? '<span class="badge badge-incomplete">⚠️</span>' : ''}</div>
-        <div class="emp-sub" style="font-family:DM Mono">${emp.username} · ${emp.workStart || '--'}–${emp.workEnd || '--'}</div>
+        <div class="emp-sub" style="font-family:DM Mono">${emp.username} · ${fmt12(emp.workStart)}–${fmt12(emp.workEnd)}</div>
         <div style="margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           ${loc ? `<span class="loc-tag">📍 ${loc.name}</span>` : '<span style="color:var(--text3);font-size:12px">No location</span>'}
           <button class="btn btn-ghost btn-xs" onclick="openEditEmpLoc('${emp.uid}')">Change</button>
@@ -970,7 +971,7 @@ function renderReports() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         <div>
           <div style="font-weight:600;font-size:14px">${emp.name} ${late ? '<span class="badge badge-late">⏰ Late</span>' : ''} ${incomplete ? '<span class="badge badge-incomplete">⚠️ Short</span>' : ''}</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:2px">${emp.workStart || '--'} – ${emp.workEnd || '--'} · ${emp.firstIn ? 'In: ' + fmtTime(emp.firstIn) : 'Not checked in'}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${fmt12(emp.workStart)} – ${fmt12(emp.workEnd)} · ${emp.firstIn ? 'In: ' + fmtTime(emp.firstIn) : 'Not checked in'}</div>
         </div>
         <div style="text-align:right">
           <div style="font-family:DM Mono;font-size:13px;font-weight:600;color:${incomplete ? 'var(--danger)' : pct >= 100 ? 'var(--accent2)' : 'var(--text)'}">${minsToStr(mins)}</div>
@@ -991,7 +992,7 @@ function renderReports() {
       const limit = new Date(); limit.setHours(sh, sm, 0, 0);
       const minsLate = emp.firstIn ? Math.round((new Date(emp.firstIn) - limit) / 60000) : 0;
       return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div><div style="font-weight:500">${emp.name}</div><div style="font-size:11px;color:var(--text2)">Expected: ${emp.workStart}</div></div>
+        <div><div style="font-weight:500">${emp.name}</div><div style="font-size:11px;color:var(--text2)">Expected: ${fmt12(emp.workStart)}</div></div>
         <div style="text-align:right"><div style="font-family:DM Mono;font-size:13px;color:var(--warning)">${fmtTime(emp.firstIn)}</div><div style="font-size:11px;color:var(--danger)">+${minsLate} min late</div></div>
       </div>`;
     }).join('')
@@ -1004,7 +1005,7 @@ function exportCSV() {
   const rows = [['Name', 'Username', 'Status', 'Check-in', 'Hours Today', 'Shift Required', 'Shift %', 'Late?', 'Incomplete?', 'Location', 'Work Hours']];
   emps.forEach(emp => {
     const loc = LOCATIONS[emp.locationId]; const req = shiftDurationMins(emp); const mins = calcMins(emp);
-    rows.push([emp.name, emp.username, emp.status === 'inside' ? 'Inside' : 'Outside', fmtTime(emp.lastIn), minsToStr(mins), req > 0 ? minsToStr(req) : '-', req > 0 ? Math.round(mins / req * 100) + '%' : '-', isLate(emp) ? 'YES' : 'No', isShiftIncomplete(emp) ? 'YES' : 'No', loc ? loc.name : 'Not assigned', (emp.workStart || '--') + ' - ' + (emp.workEnd || '--')]);
+    rows.push([emp.name, emp.username, emp.status === 'inside' ? 'Inside' : 'Outside', fmtTime(emp.lastIn), minsToStr(mins), req > 0 ? minsToStr(req) : '-', req > 0 ? Math.round(mins / req * 100) + '%' : '-', isLate(emp) ? 'YES' : 'No', isShiftIncomplete(emp) ? 'YES' : 'No', loc ? loc.name : 'Not assigned', fmt12(emp.workStart) + ' - ' + fmt12(emp.workEnd)]);
   });
   const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
