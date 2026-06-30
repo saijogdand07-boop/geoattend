@@ -425,7 +425,7 @@ select option{background:#13131a}
     <div class="field"><label>Full name</label><input id="neName" placeholder="e.g. Rahul Sharma"></div>
     <div class="form-grid">
       <div class="field"><label>Username</label><input id="neUser" placeholder="rahul"></div>
-      <div class="field"><label>Password</label><input type="password" id="nePass" placeholder="password"></div>
+      <div class="field"><label>Password</label><input type="password" id="nePass" placeholder="min 6 characters"></div>
     </div>
     <div class="form-grid">
       <div class="field"><label>Work start</label><input type="time" id="neStart" value="09:00"></div>
@@ -483,21 +483,19 @@ function emailFor(username) { return username.trim().toLowerCase() + '@geoattend
 async function ensureAuthAccount(username, plaintextPassword, role) {
   const email = emailFor(username);
   try {
-    // Try signing in first — if it works, account already exists in Auth
     await auth.signInWithEmailAndPassword(email, plaintextPassword);
     return true;
   } catch (e) {
     if (e.code === 'auth/user-not-found') {
-      // First time this user logs in since Auth was enabled — create their Auth account now
       try {
         await auth.createUserWithEmailAndPassword(email, plaintextPassword);
         return true;
       } catch (createErr) {
-        console.error('Auth create failed', createErr);
+        console.error('Auth account creation failed:', createErr.code, createErr.message);
         return false;
       }
     }
-    // Wrong password or other error
+    console.error('Auth sign-in check failed:', e.code, e.message);
     return false;
   }
 }
@@ -815,6 +813,7 @@ async function addEmployee() {
   const we = document.getElementById('neEnd').value;
   const locId = document.getElementById('neLocId').value;
   if (!name || !username || !pass) { toast('Fill all required fields', 'error'); return; }
+  if (pass.length < 6) { toast('Password must be at least 6 characters', 'error'); return; }
   const reserved = ['logs', 'status', 'totalMins', 'lastIn', 'firstIn', 'checkins', 'locationId', 'name', 'username', 'password'];
   if (reserved.includes(username)) { toast('Invalid username — choose another', 'error'); return; }
   const snap = await db.ref(`employees/${username}`).once('value');
