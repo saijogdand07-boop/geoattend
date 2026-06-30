@@ -482,15 +482,24 @@ function emailFor(username) { return username.trim().toLowerCase() + '@geoattend
 // Safe no-op if already migrated. Never touches employee attendance data.
 async function ensureAuthAccount(username, plaintextPassword, role) {
   const email = emailFor(username);
+  // Codes Firebase can return when the account does not exist yet (varies by SDK version)
+  const noAccountCodes = ['auth/user-not-found', 'auth/invalid-login-credentials', 'auth/invalid-credential'];
   try {
     await auth.signInWithEmailAndPassword(email, plaintextPassword);
     return true;
   } catch (e) {
-    if (e.code === 'auth/user-not-found') {
+    if (noAccountCodes.includes(e.code)) {
       try {
         await auth.createUserWithEmailAndPassword(email, plaintextPassword);
         return true;
       } catch (createErr) {
+        if (createErr.code === 'auth/email-already-in-use') {
+          // Account exists but our plaintext password is now stale (e.g. admin changed it
+          // only in the database, not via the proper flow). Treat as non-fatal — plaintext
+          // check already authorized this login, so don't block the user.
+          console.warn('Auth account exists but password mismatch — plaintext check still allowed login.');
+          return true;
+        }
         console.error('Auth account creation failed:', createErr.code, createErr.message);
         return false;
       }
